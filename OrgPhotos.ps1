@@ -26,7 +26,7 @@ function exiftool {
 }
 
 # Get the files which should be moved, without folders
-$files = Get-ChildItem 'G:\To Sort\Test\2019-04-04' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'G:\To Sort\Test\Video Edit\Script2' -Recurse | where {!$_.PsIsContainer}
  
 # List Files which will be moved
 #$files
@@ -58,9 +58,14 @@ foreach ($file in $files) {
             $dateField = "CreationDate"
             $adjustForTimeZoneOffset = $False
         } else {
-            $dateField = "CreateDate"
             #times will be GMT
-            $adjustForTimeZoneOffset = $True
+            #$dateField = "CreateDate"
+            #actually adjustment ioffset is wrong
+            #$adjustForTimeZoneOffset = $True
+            #but file modify time without offset right
+            $dateField = "FileModifyDate"
+            $adjustForTimeZoneOffset = $False
+
         }
     } elseif ($file.Extension -eq ".GIF") {
         $dateField = "FileModifyDate"
@@ -76,6 +81,7 @@ foreach ($file in $files) {
     #test if need to fallback
     if ([string]::IsNullOrEmpty($output)) {
         $output = exiftool -function "FileModifyDate" -filepath $file.fullName
+
     }
 
     #remove first part
@@ -172,6 +178,14 @@ foreach ($file in $files) {
         Write-Output "Add time to PNG"
         exiftool -function 'PNG:CreationTime<DateCreated' -filepath $file.fullName
     }
+
+    #update timestamp on MOV
+    if ($file.Extension -eq ".MOV" -or $file.Extension -eq ".mp4") {
+        Write-Output "Add time to MOV"
+        $dateString
+        #date without offset
+        exiftool -function 'CreateDate='+$dateString+'Z' -filepath $file.fullName
+    }
      
 
     $year = $date.Year
@@ -206,7 +220,7 @@ foreach ($file in $files) {
     if (Test-Path $newPathCurrentName) {
         #if the same, skip
         #if the file is not the same, keep old name
-        if (-not (Get-FileHash $file).Hash -eq (Get-FileHash $newPathCurrentName).Hash) {
+        if (-not ((Get-FileHash $file.FullName).Hash -eq (Get-FileHash $newPathCurrentName).Hash)) {
             #copy as is
             # Move File to new location
             $file | Copy-Item -Destination $Directory
