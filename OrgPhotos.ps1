@@ -1,11 +1,27 @@
+function exiftool {
+    Param ([string]$function, [string] $filepath)
+
+    $pinfo.Arguments = "-" + $dateField + ' "' + $file.FullName +'"'
+    $p = New-Object System.Diagnostics.Process
+    $p.StartInfo = $pinfo
+    $p.Start() | Out-Null
+    $p.WaitForExit()
+    $stdout = $p.StandardOutput.ReadToEnd()
+    $stderr = $p.StandardError.ReadToEnd()
+    Write-Host "stdout: $stdout"
+    Write-Host "stderr: $stderr"
+
+    Write-Output $stdout
+}
+
 # Get the files which should be moved, without folders
-$files = Get-ChildItem 'G:\To Sort\2017 Test\' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'G:\To Sort\Test\Time Mov' -Recurse | where {!$_.PsIsContainer}
  
 # List Files which will be moved
 #$files
  
 # Target Filder where files should be moved to. The script will automatically create a folder for the year and month.
-$targetPath = 'G:\Sorted\2017'
+$targetPath = 'G:\Sorted\Test'
  
 foreach ($file in $files) {
 
@@ -28,28 +44,62 @@ foreach ($file in $files) {
     } elseif ($file.Extension -eq ".PNG") {
         $dateField = "DateCreated"
     } elseif ($file.Extension -eq ".MOV" -or $file.Extension -eq ".mp4") {
-        $dateField = "TrackCreateDate"
+        $dateField = "CreationDate"
     } elseif ($file.Extension -eq ".GIF") {
         $dateField = "FileModifyDate"
     } else {
         $dateField = "TrackCreateDate"
     }
 
+    $output = exiftool -function $dateField -filepath $file.fullName
 
-    $pinfo.Arguments = "-" + $dateField + ' "' + $file.FullName +'"'
-    $p = New-Object System.Diagnostics.Process
-    $p.StartInfo = $pinfo
-    $p.Start() | Out-Null
-    $p.WaitForExit()
-    $stdout = $p.StandardOutput.ReadToEnd()
-    $stderr = $p.StandardError.ReadToEnd()
-    Write-Host "stdout: $stdout"
-    Write-Host "stderr: $stderr"
-    $pos = $stdout.IndexOf(":")
-    $dateString = $stdout.Substring($pos+2).trim()
+    #remove first part
+    $pos = $output.IndexOf(":")
+    $dateString = $output.Substring($pos+2).trim()
+    $dateString
+    #DISCARD (don't apply offset)
+    if ($dateString -like '*+*') {
+        $pos = $dateString.IndexOf("+")
+        $dateString = $dateString.Substring(0,$pos).trim()
+    } elseif  ($dateString -like '*-*') { 
+        $pos = $dateString.IndexOf("-")
+        $dateString = $dateString.Substring(0,$pos).trim()
+    }
     $dateString
     $date = [datetime]::ParseExact($dateString,'yyyy:MM:dd HH:mm:ss',$null)
     $date
+
+
+    #check if the date contains a timezone offset, if not will need to adust
+
+    if ($file.Extension -eq ".MOV" -or $file.Extension -eq ".mp4") {
+        if ($dateString -like '*+*' -or $dateString -like '*-*') { 
+            #do nothing
+        } else {
+            #assume file modify date
+            $output = exiftool -function 'FileModifyDate' -filepath $file.fullName
+            
+            if ($output -like '*+*') {
+                $pos = $output.IndexOf("+")
+                $offsetString = $output.Substring($pos+1).trim()
+                $hourOffset = $offsetString.Substring(0,2).trim()
+                $minOffset = $offsetString.Substring(3,2).trim()
+                $date 
+            } elseif  ($output -like '*-*') { 
+                $pos = $output.IndexOf("-")
+                $offsetString = $output.Substring($pos+1).trim()
+            } else {
+                #error
+                Write-Output "ERROR NO OFFSET STRING"
+            }
+
+            $offsetString
+            $hourOffset
+            $minOffset
+
+
+        }
+    }
  
 
     $year = $date.Year
