@@ -38,9 +38,13 @@ foreach ($file in $files) {
 
     Write-Host "-----"
 
+    #set to null
+    $lat = $null
+    $lng = $null
+
     $file.FullName
 
-    $file | Format-List
+    #$file | Format-List
        
     
     if ($file.Extension -eq ".JPG" -or $file.Extension -eq ".JPEG" -or $file.Extension -eq ".HEIC") {
@@ -48,7 +52,7 @@ foreach ($file in $files) {
     } elseif ($file.Extension -eq ".PNG") {
         $dateField = "DateCreated"
     } elseif ($file.Extension -eq ".MOV" -or $file.Extension -eq ".mp4") {
-        #check which one it has
+        #check which date format the video has
         $output = exiftool -function "CreationDate" -filepath $file.fullName
         if (-not [string]::IsNullOrEmpty($output)) {
             $dateField = "CreationDate"
@@ -94,35 +98,64 @@ foreach ($file in $files) {
     #adjust GMT times to local
     if ($adjustForTimeZoneOffset) {
         #check if it has location
+        $latlngString = exiftool -function "GPSPosition -n" -filepath $file.fullName
+        $latlngString
+         if (-not [string]::IsNullOrEmpty($latlngString)) {
+            $pos = $latlngString.IndexOf(":")
+            $latlngString = $latlngString.Substring($pos+2).trim()
+            $latlngString
+            $pos = $latlngString.IndexOf(" ")
+            $lat = $latlngString.Substring(0,$pos).trim()
+            $lng = $latlngString.Substring($pos).trim()
 
-        #assume file modify date
-        $output = exiftool -function 'FileModifyDate' -filepath $file.fullName
+            $lat
+            $lng
+
+            #here assuming GMT, which it is for movies
+            $unixTS = [int64](($date)-(get-date "1/1/1970")).TotalSeconds
+
+            $url = "http://api.timezonedb.com/v2.1/get-time-zone?key="+$TimeZoneKey+"&format=json&by=position&lat="+$lat+"&lng="+$lng+"&time="+$unixTS
+            $url
+
+            #get rest method
+            $timeZoneInfo = Invoke-RestMethod -Method Post -Uri $url
+
+            $timeZoneInfo
+
+            $timeZoneInfo.gmtOffset
+
+            $date = $date + $timeZoneInfo.gmtOffset
+
+        } else { 
+
+            #assume file modify date has the proper offset
+            #(usually right, but not if edited)
+            $output = exiftool -function 'FileModifyDate' -filepath $file.fullName
             
-        if ($output -like '*+*') {
-             $pos = $output.IndexOf("+")
-             $offsetString = $output.Substring($pos+1).trim()
-             $hourOffset = $offsetString.Substring(0,2).trim()
-             $minOffset = $offsetString.Substring(3,2).trim()
-             $date = $date.AddHours($hourOffset).AddMinutes($minOffset)
-        } elseif  ($output -like '*-*') { 
-             $pos = $output.IndexOf("-")
-             $offsetString = $output.Substring($pos+1).trim()
-             $hourOffset = $offsetString.Substring(0,2).trim()
-             $minOffset = $offsetString.Substring(3,2).trim()
-             $date = $date.AddHours(-$hourOffset).AddMinutes(-$minOffset)
-        } else {
-             #error
-             Write-Output "ERROR NO OFFSET STRING"
-        }
+            if ($output -like '*+*') {
+                 $pos = $output.IndexOf("+")
+                 $offsetString = $output.Substring($pos+1).trim()
+                 $hourOffset = $offsetString.Substring(0,2).trim()
+                 $minOffset = $offsetString.Substring(3,2).trim()
+                 $date = $date.AddHours($hourOffset).AddMinutes($minOffset)
+            } elseif  ($output -like '*-*') { 
+                 $pos = $output.IndexOf("-")
+                 $offsetString = $output.Substring($pos+1).trim()
+                 $hourOffset = $offsetString.Substring(0,2).trim()
+                 $minOffset = $offsetString.Substring(3,2).trim()
+                 $date = $date.AddHours(-$hourOffset).AddMinutes(-$minOffset)
+            } else {
+                 #error
+                 Write-Output "ERROR NO OFFSET STRING"
+            }
 
-        $offsetString
-        $hourOffset
-        $minOffset
+            $offsetString
+            $hourOffset
+            $minOffset
         
-        $date
+            $date
 
-        exit
-
+        }
 
     }
  
