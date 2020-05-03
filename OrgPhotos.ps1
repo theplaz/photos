@@ -26,5 +26,5 @@ foreach ($file in $files) {
     }
  
     # Move File to new location
-    $file | Move-Item -Destination $Directory
+    #$file | Copy-Item -Destination $Directory
 }
