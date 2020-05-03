@@ -1,3 +1,5 @@
+$TimeZoneKey = Get-Content -Path TimeZonesKey.txt
+
 function exiftool {
     Param ([string]$function, [string] $filePath)
 
@@ -57,6 +59,14 @@ foreach ($file in $files) {
     $pos = $output.IndexOf(":")
     $dateString = $output.Substring($pos+2).trim()
     $dateString
+
+    if ($dateString -like '*+*' -or $dateString -like '*-*') { 
+        $hasOffset = $True;
+    } else {
+        $hasOffset = $False;
+    }
+
+
     #DISCARD (don't apply offset)
     if ($dateString -like '*+*') {
         $pos = $dateString.IndexOf("+")
@@ -71,9 +81,8 @@ foreach ($file in $files) {
 
 
     #check if the date contains a timezone offset, if not will need to adust
-
-    if ($file.Extension -eq ".MOV" -or $file.Extension -eq ".mp4") {
-        if ($dateString -like '*+*' -or $dateString -like '*-*') { 
+    if ($file.Extension -eq ".MOV" -or $file.Extension -eq ".mp4") { #these are GMT
+        if ($hasOffset) { 
             #do nothing
         } else {
             #get location 
@@ -89,11 +98,22 @@ foreach ($file in $files) {
             $lat
             $lng
 
-            $url = "http://api.geonames.org/timezoneJSON?lat="+$lat+"&lng="+$lng+"&date="+$year+"-"+$month+"-"+$day+"&username=theplaz"
+            #here assuming GMT, which it is for movies
+            $unixTS = [int64](($date)-(get-date "1/1/1970")).TotalSeconds
+
+            $url = "http://api.timezonedb.com/v2.1/get-time-zone?key="+$TimeZoneKey+"&format=json&by=position&lat="+$lat+"&lng="+$lng+"&time="+$unixTS
             $url
 
             #get rest method
-            Invoke-RestMethod -Method Post -Uri $url
+            $timeZoneInfo = Invoke-RestMethod -Method Post -Uri $url
+
+            $timeZoneInfo
+
+            $timeZoneInfo.gmtOffset
+
+            $date = $date + $timeZoneInfo.gmtOffset
+
+            exit
 
 
         }
