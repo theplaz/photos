@@ -1,3 +1,5 @@
+#Goal is to organize files into folders by timestamp taken at LOCAL time (when taken).
+
 $TimeZoneKey = Get-Content -Path TimeZonesKey.txt
 
 function exiftool {
@@ -46,7 +48,16 @@ foreach ($file in $files) {
     } elseif ($file.Extension -eq ".PNG") {
         $dateField = "DateCreated"
     } elseif ($file.Extension -eq ".MOV" -or $file.Extension -eq ".mp4") {
-        $dateField = "CreationDate"
+        #check which one it has
+        $output = exiftool -function "CreationDate" -filepath $file.fullName
+        if (-not [string]::IsNullOrEmpty($version)) {
+            $dateField = "CreationDate"
+            $adjustForTimeZoneOffset = $False
+        } else {
+            $dateField = "CreateDate"
+            #times will be GMT
+            $adjustForTimeZoneOffset = $True
+        }
     } elseif ($file.Extension -eq ".GIF") {
         $dateField = "FileModifyDate"
     } else {
@@ -67,7 +78,7 @@ foreach ($file in $files) {
     }
 
 
-    #DISCARD (don't apply offset)
+    #DISCARD (don't apply offset, since we want local time)
     if ($dateString -like '*+*') {
         $pos = $dateString.IndexOf("+")
         $dateString = $dateString.Substring(0,$pos).trim()
@@ -80,44 +91,39 @@ foreach ($file in $files) {
     $date
 
 
-    #check if the date contains a timezone offset, if not will need to adust
-    if ($file.Extension -eq ".MOV" -or $file.Extension -eq ".mp4") { #these are GMT
-        if ($hasOffset) { 
-            #do nothing
-        } else {
+    #adjust GMT times to local
+    if ($adjustForTimeZoneOffset) {
+        #check if it has location
 
-            #check if it has location
-
-            #assume file modify date
-            $output = exiftool -function 'FileModifyDate' -filepath $file.fullName
+        #assume file modify date
+        $output = exiftool -function 'FileModifyDate' -filepath $file.fullName
             
-            if ($output -like '*+*') {
-                $pos = $output.IndexOf("+")
-                $offsetString = $output.Substring($pos+1).trim()
-                $hourOffset = $offsetString.Substring(0,2).trim()
-                $minOffset = $offsetString.Substring(3,2).trim()
-                $date = $date + $hourOffset*60*60 + $minOffset*60
-            } elseif  ($output -like '*-*') { 
-                $pos = $output.IndexOf("-")
-                $offsetString = $output.Substring($pos+1).trim()
-                $hourOffset = $offsetString.Substring(0,2).trim()
-                $minOffset = $offsetString.Substring(3,2).trim()
-                $date = $date - ($hourOffset*60*60 + $minOffset*60)
-            } else {
-                #error
-                Write-Output "ERROR NO OFFSET STRING"
-            }
-
-            $offsetString
-            $hourOffset
-            $minOffset
-
-            $date
-
-            exit
-
-
+        if ($output -like '*+*') {
+             $pos = $output.IndexOf("+")
+             $offsetString = $output.Substring($pos+1).trim()
+             $hourOffset = $offsetString.Substring(0,2).trim()
+             $minOffset = $offsetString.Substring(3,2).trim()
+             $date = $date + $hourOffset*60*60 + $minOffset*60
+        } elseif  ($output -like '*-*') { 
+             $pos = $output.IndexOf("-")
+             $offsetString = $output.Substring($pos+1).trim()
+             $hourOffset = $offsetString.Substring(0,2).trim()
+             $minOffset = $offsetString.Substring(3,2).trim()
+             $date = $date - ($hourOffset*60*60 + $minOffset*60)
+        } else {
+             #error
+             Write-Output "ERROR NO OFFSET STRING"
         }
+
+        $offsetString
+        $hourOffset
+        $minOffset
+        
+        $date
+
+        exit
+
+
     }
  
 
