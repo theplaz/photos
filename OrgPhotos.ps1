@@ -1,7 +1,14 @@
 function exiftool {
-    Param ([string]$function, [string] $filepath)
+    Param ([string]$function, [string] $filePath)
 
-    $pinfo.Arguments = "-" + $dateField + ' "' + $file.FullName +'"'
+    $pinfo = New-Object System.Diagnostics.ProcessStartInfo
+    $pinfo.FileName = "G:\exiftool.exe"
+    $pinfo.RedirectStandardError = $true
+    $pinfo.RedirectStandardOutput = $true
+    $pinfo.UseShellExecute = $false
+    $pinfo.WindowStyle = "Hidden"
+    $pinfo.CreateNoWindow = $true
+    $pinfo.Arguments = "-" + $function + ' "' + $filePath +'"'
     $p = New-Object System.Diagnostics.Process
     $p.StartInfo = $pinfo
     $p.Start() | Out-Null
@@ -30,14 +37,7 @@ foreach ($file in $files) {
     $file.FullName
 
     $file | Format-List
-   
-    $pinfo = New-Object System.Diagnostics.ProcessStartInfo
-    $pinfo.FileName = "G:\exiftool.exe"
-    $pinfo.RedirectStandardError = $true
-    $pinfo.RedirectStandardOutput = $true
-    $pinfo.UseShellExecute = $false
-    $pinfo.WindowStyle = "Hidden"
-    $pinfo.CreateNoWindow = $true
+       
     
     if ($file.Extension -eq ".JPG" -or $file.Extension -eq ".JPEG" -or $file.Extension -eq ".HEIC") {
         $dateField = "DateTimeOriginal"
@@ -76,8 +76,24 @@ foreach ($file in $files) {
         if ($dateString -like '*+*' -or $dateString -like '*-*') { 
             #do nothing
         } else {
+            #get location 
+            $latlngString = exiftool -function "GPSPosition -n" -filepath $file.fullName
+            $latlngString
+            $pos = $latlngString.IndexOf(":")
+            $latlngString = $latlngString.Substring($pos+2).trim()
+            $latlngString
+            $pos = $latlngString.IndexOf(" ")
+            $lat = $latlngString.Substring(0,$pos).trim()
+            $lng = $latlngString.Substring($pos).trim()
+
+            $lat
+            $lng
+
+            $url = "http://api.geonames.org/timezoneJSON?lat="+$lat+"&lng="+$lng+"&username=theplaz"
+            $url
+
             #get rest method
-            Invoke-RestMethod -Method Post -Uri "http://api.geonames.org/timezoneJSON?lat=47.01&lng=10.2&username=demo"
+            Invoke-RestMethod -Method Post -Uri $url
 
 
         }
