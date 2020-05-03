@@ -65,10 +65,15 @@ foreach ($file in $files) {
     } elseif ($file.Extension -eq ".GIF") {
         $dateField = "FileModifyDate"
     } else {
-        $dateField = "TrackCreateDate"
+        $dateField = "FileModifyDate"
     }
 
     $output = exiftool -function $dateField -filepath $file.fullName
+
+    #test if need to fallback
+    if (-not [string]::IsNullOrEmpty($output)) {
+        $output = exiftool -function "FileModifyDate" -filepath $file.fullName
+    }
 
     #remove first part
     $pos = $output.IndexOf(":")
@@ -181,17 +186,10 @@ foreach ($file in $files) {
 	}
 
 
+
     # Out FileName, year and month
     $file.FullName + ': ' + $year + "-" + $month + "-" + $day
 
- 
-    # Set Directory Path
-    $Directory = $targetPath + "\" + $year + "\" + $year + '-' + $month + '-' + $day
-    # Create directory if it doesn't exsist
-    if (!(Test-Path $Directory)) {
-        New-Item $directory -type directory | Out-Null
-    }
- 
     # Move File to new location
     $file | Copy-Item -Destination $Directory
 }
