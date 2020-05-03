@@ -185,11 +185,31 @@ foreach ($file in $files) {
 	    $day = $day.ToString()
 	}
 
-
-
     # Out FileName, year and month
     $file.FullName + ': ' + $year + "-" + $month + "-" + $day
+    
+    # Set Directory Path
+    $Directory = $targetPath + "\" + $year + "\" + $year + '-' + $month + '-' + $day
+    # Create directory if it doesn't exsist
+    if (!(Test-Path $Directory)) {
+        New-Item $directory -type directory | Out-Null
+    }
 
-    # Move File to new location
-    $file | Copy-Item -Destination $Directory
+
+    #rename away (1)
+    $newPathCurrentName = $Directory + "\" + $file
+    $newPathCurrentName
+    if (Test-Path $newPathCurrentName) {
+        #copy as is
+        # Move File to new location
+        $file | Copy-Item -Destination $Directory
+    } else {
+        #rename and copy
+        $newFileName = $file -replace '\([^\)]+\)'
+        $newFileName
+        $newPathNewName = $Directory + "\" + $newFileName
+        $newPathNewName
+        $file | Copy-Item -Destination $newPathNewName
+
+    }
 }
