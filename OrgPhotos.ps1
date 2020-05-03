@@ -76,26 +76,8 @@ foreach ($file in $files) {
         if ($dateString -like '*+*' -or $dateString -like '*-*') { 
             #do nothing
         } else {
-            #assume file modify date
-            $output = exiftool -function 'FileModifyDate' -filepath $file.fullName
-            
-            if ($output -like '*+*') {
-                $pos = $output.IndexOf("+")
-                $offsetString = $output.Substring($pos+1).trim()
-                $hourOffset = $offsetString.Substring(0,2).trim()
-                $minOffset = $offsetString.Substring(3,2).trim()
-                $date 
-            } elseif  ($output -like '*-*') { 
-                $pos = $output.IndexOf("-")
-                $offsetString = $output.Substring($pos+1).trim()
-            } else {
-                #error
-                Write-Output "ERROR NO OFFSET STRING"
-            }
-
-            $offsetString
-            $hourOffset
-            $minOffset
+            #get rest method
+            Invoke-RestMethod -Method Post -Uri "http://api.geonames.org/timezoneJSON?lat=47.01&lng=10.2&username=demo"
 
 
         }
