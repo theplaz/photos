@@ -85,33 +85,34 @@ foreach ($file in $files) {
         if ($hasOffset) { 
             #do nothing
         } else {
-            #get location 
-            $latlngString = exiftool -function "GPSPosition -n" -filepath $file.fullName
-            $latlngString
-            $pos = $latlngString.IndexOf(":")
-            $latlngString = $latlngString.Substring($pos+2).trim()
-            $latlngString
-            $pos = $latlngString.IndexOf(" ")
-            $lat = $latlngString.Substring(0,$pos).trim()
-            $lng = $latlngString.Substring($pos).trim()
 
-            $lat
-            $lng
+            #check if it has location
 
-            #here assuming GMT, which it is for movies
-            $unixTS = [int64](($date)-(get-date "1/1/1970")).TotalSeconds
+            #assume file modify date
+            $output = exiftool -function 'FileModifyDate' -filepath $file.fullName
+            
+            if ($output -like '*+*') {
+                $pos = $output.IndexOf("+")
+                $offsetString = $output.Substring($pos+1).trim()
+                $hourOffset = $offsetString.Substring(0,2).trim()
+                $minOffset = $offsetString.Substring(3,2).trim()
+                $date = $date + $hourOffset*60*60 + $minOffset*60
+            } elseif  ($output -like '*-*') { 
+                $pos = $output.IndexOf("-")
+                $offsetString = $output.Substring($pos+1).trim()
+                $hourOffset = $offsetString.Substring(0,2).trim()
+                $minOffset = $offsetString.Substring(3,2).trim()
+                $date = $date - ($hourOffset*60*60 + $minOffset*60)
+            } else {
+                #error
+                Write-Output "ERROR NO OFFSET STRING"
+            }
 
-            $url = "http://api.timezonedb.com/v2.1/get-time-zone?key="+$TimeZoneKey+"&format=json&by=position&lat="+$lat+"&lng="+$lng+"&time="+$unixTS
-            $url
+            $offsetString
+            $hourOffset
+            $minOffset
 
-            #get rest method
-            $timeZoneInfo = Invoke-RestMethod -Method Post -Uri $url
-
-            $timeZoneInfo
-
-            $timeZoneInfo.gmtOffset
-
-            $date = $date + $timeZoneInfo.gmtOffset
+            $date
 
             exit
 
