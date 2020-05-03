@@ -89,7 +89,7 @@ foreach ($file in $files) {
             $lat
             $lng
 
-            $url = "http://api.geonames.org/timezoneJSON?lat="+$lat+"&lng="+$lng+"&username=theplaz"
+            $url = "http://api.geonames.org/timezoneJSON?lat="+$lat+"&lng="+$lng+"&date="+$year+"-"+$month+"-"+$day+"&username=theplaz"
             $url
 
             #get rest method
