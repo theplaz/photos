@@ -158,7 +158,13 @@ foreach ($file in $files) {
         }
 
     }
- 
+
+    #update timestamp on PNG
+    if ($file.Extension -eq ".PNG") {
+        Write-Output "Add time to PNG"
+        exiftool -function 'PNG:CreationTime<DateCreated' -filepath $file.fullName
+    }
+     
 
     $year = $date.Year
     $month = $date.Month
