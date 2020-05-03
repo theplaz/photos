@@ -69,6 +69,7 @@ foreach ($file in $files) {
     }
 
     $output = exiftool -function $dateField -filepath $file.fullName
+    $output
 
     #test if need to fallback
     if (-not [string]::IsNullOrEmpty($output)) {
@@ -199,10 +200,15 @@ foreach ($file in $files) {
     #rename away (1)
     $newPathCurrentName = $Directory + "\" + $file
     $newPathCurrentName
+    #if the file already exists
     if (Test-Path $newPathCurrentName) {
-        #copy as is
-        # Move File to new location
-        $file | Copy-Item -Destination $Directory
+        #if the same, skip
+        #if the file is not the same, keep old name
+        if (-not (Get-FileHash $file).Hash -eq (Get-FileHash $newPathCurrentName).Hash) {
+            #copy as is
+            # Move File to new location
+            $file | Copy-Item -Destination $Directory
+        }
     } else {
         #rename and copy
         $newFileName = $file -replace '\([^\)]+\)'
