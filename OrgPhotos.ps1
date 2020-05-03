@@ -26,7 +26,7 @@ function exiftool {
 }
 
 # Get the files which should be moved, without folders
-$files = Get-ChildItem 'G:\To Sort\Test\Time Mov' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'G:\To Sort\Test\2019-04-04' -Recurse | where {!$_.PsIsContainer}
  
 # List Files which will be moved
 #$files
@@ -183,9 +183,9 @@ foreach ($file in $files) {
     $Directory = $targetPath + "\" + $year + "\" + $year + '-' + $month + '-' + $day
     # Create directory if it doesn't exsist
     if (!(Test-Path $Directory)) {
-        New-Item $directory -type directory
+        New-Item $directory -type directory | Out-Null
     }
  
     # Move File to new location
-    #$file | Copy-Item -Destination $Directory
+    $file | Copy-Item -Destination $Directory
 }
