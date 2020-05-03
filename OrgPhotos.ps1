@@ -64,6 +64,8 @@ foreach ($file in $files) {
         }
     } elseif ($file.Extension -eq ".GIF") {
         $dateField = "FileModifyDate"
+    } elseif ($file.Extension -eq ".png_original") {
+        continue #skip these
     } else {
         $dateField = "FileModifyDate"
     }
