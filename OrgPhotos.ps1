@@ -50,7 +50,7 @@ foreach ($file in $files) {
     } elseif ($file.Extension -eq ".MOV" -or $file.Extension -eq ".mp4") {
         #check which one it has
         $output = exiftool -function "CreationDate" -filepath $file.fullName
-        if (-not [string]::IsNullOrEmpty($version)) {
+        if (-not [string]::IsNullOrEmpty($output)) {
             $dateField = "CreationDate"
             $adjustForTimeZoneOffset = $False
         } else {
@@ -103,13 +103,13 @@ foreach ($file in $files) {
              $offsetString = $output.Substring($pos+1).trim()
              $hourOffset = $offsetString.Substring(0,2).trim()
              $minOffset = $offsetString.Substring(3,2).trim()
-             $date = $date + $hourOffset*60*60 + $minOffset*60
+             $date = $date.AddHours($hourOffset).AddMinutes($minOffset)
         } elseif  ($output -like '*-*') { 
              $pos = $output.IndexOf("-")
              $offsetString = $output.Substring($pos+1).trim()
              $hourOffset = $offsetString.Substring(0,2).trim()
              $minOffset = $offsetString.Substring(3,2).trim()
-             $date = $date - ($hourOffset*60*60 + $minOffset*60)
+             $date = $date.AddHours(-$hourOffset).AddMinutes(-$minOffset)
         } else {
              #error
              Write-Output "ERROR NO OFFSET STRING"
