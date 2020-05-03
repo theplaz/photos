@@ -72,7 +72,7 @@ foreach ($file in $files) {
     $output
 
     #test if need to fallback
-    if (-not [string]::IsNullOrEmpty($output)) {
+    if ([string]::IsNullOrEmpty($output)) {
         $output = exiftool -function "FileModifyDate" -filepath $file.fullName
     }
 
