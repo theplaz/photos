@@ -185,10 +185,13 @@ foreach ($file in $files) {
         Write-Output "Add time to MOV"
         #date needs to be written in GMT!
         $gmtDate
+        $gmtDate = $date.AddHours(8)
         $gmtDateString = $gmtDate.ToString("yyyy:MM:dd HH:mm:ss")
         $gmtDateString
-        $command = "CreateDate="+$gmtDateString+"Z"
-        $command
+        $command = "CreateDate="+$gmtDateString+""
+        #$dateWithOffsetString = $dateWithOffset.ToString("yyyy:MM:dd HH:mm:ss")
+        #$dateWithOffsetString
+        #$command = "CreateDate="+$dateWithOffsetString+""
         exiftool -function $command -filepath $file.fullName
     }
 
