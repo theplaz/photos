@@ -127,52 +127,14 @@ foreach ($file in $files) {
     $offsetString
     $hourOffset
     $minOffset
-            
-    #$dateWithOffset
+           
+    $dateWithOffset
     $gmtDate
 
 
-    #adjust GMT times to local
-    if ($True) {
-        <#
-        #check if it has location
-        $latlngString = exiftool -function "GPSPosition -n" -filepath $file.fullName
-        $latlngString
-         if (-not [string]::IsNullOrEmpty($latlngString)) {
-            $pos = $latlngString.IndexOf(":")
-            $latlngString = $latlngString.Substring($pos+2).trim()
-            $latlngString
-            $pos = $latlngString.IndexOf(" ")
-            $lat = $latlngString.Substring(0,$pos).trim()
-            $lng = $latlngString.Substring($pos).trim()
+    
 
-            $lat
-            $lng
-
-            #here assuming GMT, which it is for movies
-            $unixTS = [int64](($date)-(get-date "1/1/1970")).TotalSeconds
-
-            $url = "http://api.timezonedb.com/v2.1/get-time-zone?key="+$TimeZoneKey+"&format=json&by=position&lat="+$lat+"&lng="+$lng+"&time="+$unixTS
-            $url
-
-            #get rest method
-            $timeZoneInfo = Invoke-RestMethod -Method Post -Uri $url
-
-            $timeZoneInfo
-
-            $timeZoneInfo.gmtOffset
-
-            $gmtDate = $date + $timeZoneInfo.gmtOffset
-
-        } else { 
-        #>
-
-
-
-        #}
-
-    }
-
+    
     #update timestamp on PNG
     if ($file.Extension -eq ".PNG") {
         Write-Output "Add time to PNG"
@@ -183,9 +145,25 @@ foreach ($file in $files) {
     #update timestamp on MOV
     if ($file.Extension -eq ".MOV" -or $file.Extension -eq ".mp4") {
         Write-Output "Add time to MOV"
-        #date needs to be written in GMT!
+        #date needs to be written in GMT+PC offset on that date!
+
         $gmtDate
-        $gmtDate = $date.AddHours(8)
+
+        #get timestamp offset on this date
+        $unixTS = [int64](($date)-(get-date "1/1/1970")).TotalSeconds
+        $url = "http://api.timezonedb.com/v2.1/get-time-zone?key="+$TimeZoneKey+"&format=json&by=zone&zone=America/Los_Angeles&time="+$unixTS
+        $url
+
+        #get rest method
+        $CurrentTimeZoneInfo = Invoke-RestMethod -Method Post -Uri $url
+
+        #$CurrentTimeZoneInfo
+
+        $CurrentTimeZoneInfo.gmtOffset
+
+
+        
+        $gmtDate = $date.AddSeconds(-$currentTimeZoneInfo.gmtOffset)
         $gmtDateString = $gmtDate.ToString("yyyy:MM:dd HH:mm:ss")
         $gmtDateString
         $command = "CreateDate="+$gmtDateString+""
