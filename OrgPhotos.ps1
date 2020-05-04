@@ -28,7 +28,7 @@ function exiftool {
 }
 
 # Get the files which should be moved, without folders
-$files = Get-ChildItem 'G:\To Sort\Test\Video Edit\Script4' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'G:\To Sort\Test\Video Edit\Script5' -Recurse | where {!$_.PsIsContainer}
  
 # List Files which will be moved
 #$files
@@ -131,9 +131,6 @@ foreach ($file in $files) {
     $dateWithOffset
     $gmtDate
 
-
-    
-
     
     #update timestamp on PNG
     if ($file.Extension -eq ".PNG") {
@@ -151,19 +148,35 @@ foreach ($file in $files) {
 
         #get timestamp offset on this date
         $unixTS = [int64](($date)-(get-date "1/1/1970")).TotalSeconds
-        $url = "http://api.timezonedb.com/v2.1/get-time-zone?key="+$TimeZoneKey+"&format=json&by=zone&zone=America/Los_Angeles&time="+$unixTS
-        $url
+        if ($unixTS -gt 1615690800) { $currentOffset = '-25200' }
+        elseif ($unixTS -gt 1604192400) { $currentOffset = '-28800' }
+        elseif ($unixTS -gt 1583636400) { $currentOffset = '-25200' }
+        elseif ($unixTS -gt 1572742800) { $currentOffset = '-28800' }
+        elseif ($unixTS -gt 1552186800) { $currentOffset = '-25200' }
+        elseif ($unixTS -gt 1541293200) { $currentOffset = '-28800' }
+        elseif ($unixTS -gt 1520737200) { $currentOffset = '-25200' }
+        elseif ($unixTS -gt 1509843600) { $currentOffset = '-28800' }
+        elseif ($unixTS -gt 1489287600) { $currentOffset = '-25200' }
+        elseif ($unixTS -gt 1478394000) { $currentOffset = '-28800' }
+        elseif ($unixTS -gt 1457838000) { $currentOffset = '-25200' }
+        elseif ($unixTS -gt 1446339600) { $currentOffset = '-28800' }
+        elseif ($unixTS -gt 1425783600) { $currentOffset = '-25200' }
+        elseif ($unixTS -gt 1414890000) { $currentOffset = '-28800' }
+        elseif ($unixTS -gt 1394334000) { $currentOffset = '-25200' }
+        elseif ($unixTS -gt 1383440400) { $currentOffset = '-28800' }
+        elseif ($unixTS -gt 1362884400) { $currentOffset = '-25200' }
+        elseif ($unixTS -gt 1351990800) { $currentOffset = '-28800' }
+        elseif ($unixTS -gt 1331434800) { $currentOffset = '-25200' }
+        elseif ($unixTS -gt 1320541200) { $currentOffset = '-28800' }
+        elseif ($unixTS -gt 1299985200) { $currentOffset = '-25200' }
+        elseif ($unixTS -gt 1289091600) { $currentOffset = '-28800' }
+        elseif ($unixTS -gt 1268535600) { $currentOffset = '-25200' }
+        elseif ($unixTS -gt 1257037200) { $currentOffset = '-28800' }
 
-        #get rest method
-        $CurrentTimeZoneInfo = Invoke-RestMethod -Method Post -Uri $url
-
-        #$CurrentTimeZoneInfo
-
-        $CurrentTimeZoneInfo.gmtOffset
-
+        $currentOffset
 
         
-        $gmtDate = $date.AddSeconds(-$currentTimeZoneInfo.gmtOffset)
+        $gmtDate = $date.AddSeconds(-$currentOffset)
         $gmtDateString = $gmtDate.ToString("yyyy:MM:dd HH:mm:ss")
         $gmtDateString
         $command = "CreateDate="+$gmtDateString+""
