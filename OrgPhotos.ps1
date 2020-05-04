@@ -26,7 +26,7 @@ function exiftool {
 }
 
 # Get the files which should be moved, without folders
-$files = Get-ChildItem 'G:\To Sort\Test\Video Edit\Script2' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'G:\To Sort\Test\Time Mov' -Recurse | where {!$_.PsIsContainer}
  
 # List Files which will be moved
 #$files
@@ -110,6 +110,7 @@ foreach ($file in $files) {
 
 
     #adjust GMT times to local
+    #this may never be true
     if ($adjustForTimeZoneOffset) {
         #check if it has location
         $latlngString = exiftool -function "GPSPosition -n" -filepath $file.fullName
