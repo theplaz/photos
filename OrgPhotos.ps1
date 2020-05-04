@@ -26,7 +26,7 @@ function exiftool {
 }
 
 # Get the files which should be moved, without folders
-$files = Get-ChildItem 'G:\To Sort\Test\Video Edit\Script3' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'G:\To Sort\Test\Video Edit\Script4' -Recurse | where {!$_.PsIsContainer}
  
 # List Files which will be moved
 #$files
@@ -69,7 +69,7 @@ foreach ($file in $files) {
         }
     } elseif ($file.Extension -eq ".GIF") {
         $dateField = "FileModifyDate"
-    } elseif ($file.Extension -eq ".png_original") {
+    } elseif ($file.Extension -eq "original") {
         continue #skip these
     } else {
         $dateField = "FileModifyDate"
@@ -89,29 +89,49 @@ foreach ($file in $files) {
     $dateString = $output.Substring($pos+2).trim()
     $dateString
 
-    if ($dateString -like '*+*' -or $dateString -like '*-*') { 
-        $hasOffset = $True;
-    } else {
-        $hasOffset = $False;
-    }
-
-
+    #split offset
     #DISCARD (don't apply offset, since we want local time)
-    if ($dateString -like '*+*') {
+    if ($dateString -like '*+*') { 
+        $hasOffset = $True;
         $pos = $dateString.IndexOf("+")
-        $dateString = $dateString.Substring(0,$pos).trim()
-    } elseif  ($dateString -like '*-*') { 
+        
+        $justDateString = $dateString.Substring(0,$pos).trim()
+        $date = [datetime]::ParseExact($justDateString,'yyyy:MM:dd HH:mm:ss',$null)
+
+        $offsetString = $dateString.Substring($pos+1).trim()
+        $hourOffset = $offsetString.Substring(0,2).trim()
+        $minOffset = $offsetString.Substring(3,2).trim()
+        $dateWithOffset = $date.AddHours($hourOffset).AddMinutes($minOffset)
+        $gmtDate = $date.AddHours(-$hourOffset).AddMinutes(-$minOffset)
+        
+    } elseif ($dateString -like '*-*') {
+        $hasOffset = $False;
         $pos = $dateString.IndexOf("-")
-        $dateString = $dateString.Substring(0,$pos).trim()
+
+        $justDateString = $dateString.Substring(0,$pos).trim()
+        $date = [datetime]::ParseExact($justDateString,'yyyy:MM:dd HH:mm:ss',$null)
+
+        $offsetString = $dateString.Substring($pos+1).trim()
+        $hourOffset = $offsetString.Substring(0,2).trim()
+        $minOffset = $offsetString.Substring(3,2).trim()
+        $dateWithOffset = $date.AddHours(-$hourOffset).AddMinutes(-$minOffset)
+        $gmtDate = $date.AddHours($hourOffset).AddMinutes($minOffset)
+    } else {
+        $date = [datetime]::ParseExact($dateString,'yyyy:MM:dd HH:mm:ss',$null)
     }
-    $dateString
-    $date = [datetime]::ParseExact($dateString,'yyyy:MM:dd HH:mm:ss',$null)
-    $date
+    
+    
+    $offsetString
+    $hourOffset
+    $minOffset
+            
+    #$dateWithOffset
+    $gmtDate
 
 
     #adjust GMT times to local
-    #this may never be true
-    if ($adjustForTimeZoneOffset) {
+    if ($True) {
+        <#
         #check if it has location
         $latlngString = exiftool -function "GPSPosition -n" -filepath $file.fullName
         $latlngString
@@ -139,38 +159,14 @@ foreach ($file in $files) {
 
             $timeZoneInfo.gmtOffset
 
-            $date = $date + $timeZoneInfo.gmtOffset
+            $gmtDate = $date + $timeZoneInfo.gmtOffset
 
         } else { 
+        #>
 
-            #assume file modify date has the proper offset
-            #(usually right, but not if edited)
-            $output = exiftool -function 'FileModifyDate' -filepath $file.fullName
-            
-            if ($output -like '*+*') {
-                 $pos = $output.IndexOf("+")
-                 $offsetString = $output.Substring($pos+1).trim()
-                 $hourOffset = $offsetString.Substring(0,2).trim()
-                 $minOffset = $offsetString.Substring(3,2).trim()
-                 $date = $date.AddHours($hourOffset).AddMinutes($minOffset)
-            } elseif  ($output -like '*-*') { 
-                 $pos = $output.IndexOf("-")
-                 $offsetString = $output.Substring($pos+1).trim()
-                 $hourOffset = $offsetString.Substring(0,2).trim()
-                 $minOffset = $offsetString.Substring(3,2).trim()
-                 $date = $date.AddHours(-$hourOffset).AddMinutes(-$minOffset)
-            } else {
-                 #error
-                 Write-Output "ERROR NO OFFSET STRING"
-            }
 
-            $offsetString
-            $hourOffset
-            $minOffset
-        
-            $date
 
-        }
+        #}
 
     }
 
@@ -180,15 +176,16 @@ foreach ($file in $files) {
         exiftool -function 'PNG:CreationTime<DateCreated' -filepath $file.fullName
     }
 
-    <#
+    
     #update timestamp on MOV
     if ($file.Extension -eq ".MOV" -or $file.Extension -eq ".mp4") {
         Write-Output "Add time to MOV"
-        $dateString
-        #date without offset
-        exiftool -function 'AllDates='+$dateString -filepath $file.fullName
+        #date needs to be written in GMT!
+        $gmtDate
+        $gmtDateString = $gmtDate.ToString("yyyy:MM:dd HH:mm:ss")
+        $gmtDateString
+        exiftool -function 'AllDates='+$gmtDateString -filepath $file.fullName
     }
-    #>
 
     $year = $date.Year
     $month = $date.Month
