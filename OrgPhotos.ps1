@@ -26,7 +26,7 @@ function exiftool {
 }
 
 # Get the files which should be moved, without folders
-$files = Get-ChildItem 'G:\To Sort\Test\Time Mov' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'G:\To Sort\Test\Video Edit\Script3' -Recurse | where {!$_.PsIsContainer}
  
 # List Files which will be moved
 #$files
@@ -180,14 +180,15 @@ foreach ($file in $files) {
         exiftool -function 'PNG:CreationTime<DateCreated' -filepath $file.fullName
     }
 
+    <#
     #update timestamp on MOV
     if ($file.Extension -eq ".MOV" -or $file.Extension -eq ".mp4") {
         Write-Output "Add time to MOV"
         $dateString
         #date without offset
-        exiftool -function 'CreateDate='+$dateString+'Z' -filepath $file.fullName
+        exiftool -function 'AllDates='+$dateString -filepath $file.fullName
     }
-     
+    #>
 
     $year = $date.Year
     $month = $date.Month
