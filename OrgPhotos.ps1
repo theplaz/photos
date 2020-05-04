@@ -5,6 +5,8 @@ $TimeZoneKey = Get-Content -Path TimeZonesKey.txt
 function exiftool {
     Param ([string]$function, [string] $filePath)
 
+    Write-Host $function
+
     $pinfo = New-Object System.Diagnostics.ProcessStartInfo
     $pinfo.FileName = "G:\exiftool.exe"
     $pinfo.RedirectStandardError = $true
@@ -12,7 +14,7 @@ function exiftool {
     $pinfo.UseShellExecute = $false
     $pinfo.WindowStyle = "Hidden"
     $pinfo.CreateNoWindow = $true
-    $pinfo.Arguments = "-" + $function + ' "' + $filePath +'"'
+    $pinfo.Arguments = '-"' + $function + '" "' + $filePath +'"'
     $p = New-Object System.Diagnostics.Process
     $p.StartInfo = $pinfo
     $p.Start() | Out-Null
@@ -105,7 +107,7 @@ foreach ($file in $files) {
         $gmtDate = $date.AddHours(-$hourOffset).AddMinutes(-$minOffset)
         
     } elseif ($dateString -like '*-*') {
-        $hasOffset = $False;
+        $hasOffset = $True;
         $pos = $dateString.IndexOf("-")
 
         $justDateString = $dateString.Substring(0,$pos).trim()
@@ -117,6 +119,7 @@ foreach ($file in $files) {
         $dateWithOffset = $date.AddHours(-$hourOffset).AddMinutes(-$minOffset)
         $gmtDate = $date.AddHours($hourOffset).AddMinutes($minOffset)
     } else {
+        $hasOffset = $False;
         $date = [datetime]::ParseExact($dateString,'yyyy:MM:dd HH:mm:ss',$null)
     }
     
@@ -184,7 +187,9 @@ foreach ($file in $files) {
         $gmtDate
         $gmtDateString = $gmtDate.ToString("yyyy:MM:dd HH:mm:ss")
         $gmtDateString
-        exiftool -function 'AllDates='+$gmtDateString -filepath $file.fullName
+        $command = "CreateDate="+$gmtDateString
+        $command
+        exiftool -function $command -filepath $file.fullName
     }
 
     $year = $date.Year
