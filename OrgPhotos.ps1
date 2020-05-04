@@ -187,7 +187,7 @@ foreach ($file in $files) {
         $gmtDate
         $gmtDateString = $gmtDate.ToString("yyyy:MM:dd HH:mm:ss")
         $gmtDateString
-        $command = "CreateDate="+$gmtDateString
+        $command = "CreateDate="+$gmtDateString+"Z"
         $command
         exiftool -function $command -filepath $file.fullName
     }
