@@ -8,7 +8,7 @@ function exiftool {
     Write-Host $function
 
     $pinfo = New-Object System.Diagnostics.ProcessStartInfo
-    $pinfo.FileName = "G:\exiftool.exe"
+    $pinfo.FileName = "D:\exiftool.exe"
     $pinfo.RedirectStandardError = $true
     $pinfo.RedirectStandardOutput = $true
     $pinfo.UseShellExecute = $false
@@ -28,13 +28,13 @@ function exiftool {
 }
 
 # Get the files which should be moved, without folders
-$files = Get-ChildItem 'G:\To Sort\Test\Video Edit\Script5' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'D:\To Sort\2020' -Recurse | where {!$_.PsIsContainer}
  
 # List Files which will be moved
 #$files
  
 # Target Filder where files should be moved to. The script will automatically create a folder for the year and month.
-$targetPath = 'G:\Sorted\Test'
+$targetPath = 'D:\Sorted\Output2'
  
 foreach ($file in $files) {
 
@@ -211,25 +211,30 @@ foreach ($file in $files) {
     }
 
 
+    #to fix: if the (1) version coipid first then normal version tries to be copied
+
     #rename away (1)
     $newPathCurrentName = $Directory + "\" + $file
     $newPathCurrentName
     #if the file already exists
     if (Test-Path $newPathCurrentName) {
-        #if the same, skip
         #if the file is not the same, keep old name
         if (-not ((Get-FileHash $file.FullName).Hash -eq (Get-FileHash $newPathCurrentName).Hash)) {
             #copy as is
             # Move File to new location
-            $file | Copy-Item -Destination $Directory
+            $file | Move-Item -Destination $Directory
         }
-    } else {
-        #rename and copy
-        $newFileName = $file -replace '\([^\)]+\)'
-        $newFileName
-        $newPathNewName = $Directory + "\" + $newFileName
-        $newPathNewName
-        $file | Copy-Item -Destination $newPathNewName
-
+        #if the same, skip
+    } else { #file doesnt exist
+       #rename and copy
+       if (-not $file -like '*(Edited)*') {
+           $newFileName = $file -replace '\([^\)]+\)'
+           $newFileName
+       } else {
+           $newFileName = $file
+       }
+       $newPathNewName = $Directory + "\" + $newFileName
+       $newPathNewName
+       $file | Move-Item -Destination $newPathNewName
     }
 }
