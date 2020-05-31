@@ -218,21 +218,28 @@ foreach ($file in $files) {
     $newPathCurrentName
     #if the file already exists
     if (Test-Path $newPathCurrentName) {
+        Write-Output "file exists"
         #if the file is not the same, keep old name
         if (-not ((Get-FileHash $file.FullName).Hash -eq (Get-FileHash $newPathCurrentName).Hash)) {
             #copy as is
             # Move File to new location
+            Write-Output "keep old name"
             $file | Move-Item -Destination $Directory
         }
         #if the same, skip
     } else { #file doesnt exist
        #rename and copy
-       if (-not $file -like '*(Edited)*') {
+       Write-Output "rename and copy"
+       Write-Output ($file -like '*(Edited)*')
+       if ($file -like '*(Edited)*') {
+           Write-Output "leave name"
+           $newFileName = $file
+       } else {
+           Write-Output "strip ()"
            $newFileName = $file -replace '\([^\)]+\)'
            $newFileName
-       } else {
-           $newFileName = $file
        }
+       Write-Output $newFileName
        $newPathNewName = $Directory + "\" + $newFileName
        $newPathNewName
        $file | Move-Item -Destination $newPathNewName
