@@ -14,7 +14,7 @@ function exiftool {
     $pinfo.UseShellExecute = $false
     $pinfo.WindowStyle = "Hidden"
     $pinfo.CreateNoWindow = $true
-    $pinfo.Arguments = '-"' + $function + '" "' + $filePath +'"'
+    $pinfo.Arguments = '-"' + $function + '" "' + $filePath +'" -overwrite_original' 
     $p = New-Object System.Diagnostics.Process
     $p.StartInfo = $pinfo
     $p.Start() | Out-Null
@@ -34,7 +34,7 @@ $files = Get-ChildItem 'D:\To Sort\2020' -Recurse | where {!$_.PsIsContainer}
 #$files
  
 # Target Filder where files should be moved to. The script will automatically create a folder for the year and month.
-$targetPath = 'D:\Sorted\Output2'
+$targetPath = 'D:\Sorted\Output3'
  
 foreach ($file in $files) {
 
