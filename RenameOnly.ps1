@@ -1,5 +1,5 @@
 ﻿# Get the files which should be moved, without folders
-$files = Get-ChildItem 'D:\Sorted\Output3\2020\2020-04-29' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'D:\Sorted\Output4' -Recurse | where {!$_.PsIsContainer}
  
 
 foreach ($file in $files) {
