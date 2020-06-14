@@ -215,8 +215,7 @@ foreach ($file in $files) {
     $newPathCurrentName = $Directory + "\" + $file
     $newPathCurrentName
     Write-Output $file.BaseName
-    Write-Output "check if needst to be renamed"
-    Write-Output ($file -like '*(Edited)*')
+    Write-Output "check if needs to be renamed"
     if ($file -like '*(Edited)*') {
         Write-Output "leave name since Edited"
         $newFileName = $file.BaseName
@@ -229,8 +228,17 @@ foreach ($file in $files) {
     Write-Output $newPathNewName
     
 
+    $originalHash = (Get-FileHash $file.FullName).Hash
+    if (Test-Path $newPathNewName) {
+        $targetHash = (Get-FileHash $newPathNewName).Hash
+    } else {
+        #file doesn't exist; move
+        $targetHash = $originalHash
+    }
+
+
     #check to make sure file is not there and is the same
-    while (-not (Test-Path $newPathNewName) -or (-not ((Get-FileHash $file.FullName).Hash -eq (Get-FileHash $newPathNewName -ea silentlycontinue).Hash))) {
+    while ($originalHash -ne $targetHash) {
        
         #if the file is not the same, add (2)
         if (-not ((Get-FileHash $file.FullName).Hash -eq (Get-FileHash $newPathNewName).Hash)) {
@@ -240,9 +248,17 @@ foreach ($file in $files) {
             $newPathNewName = $Directory + "\" + $newFileName + $file.Extension
             Write-Output $newFileName
 
+            if (Test-Path $newPathNewName) {
+                $targetHash = (Get-FileHash $newPathNewName).Hash
+            } else {
+                #file doesn't exist; move
+                $targetHash = $originalHash
+            }
         }
     }
 
     #actually move
+    Write-Output "Time to move"
+    $newPathNewName
     $file | Move-Item -Destination $newPathNewName
 }
