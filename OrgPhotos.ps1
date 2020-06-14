@@ -1,6 +1,5 @@
 #Goal is to organize files into folders by timestamp taken at LOCAL time (when taken).
 
-$TimeZoneKey = Get-Content -Path "C:\Users\plasm\OneDrive\Documents\GitHub\photos\TimeZonesKey.txt"
 
 function exiftool {
     Param ([string]$function, [string] $filePath)
