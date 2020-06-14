@@ -28,13 +28,13 @@ function exiftool {
 }
 
 # Get the files which should be moved, without folders
-$files = Get-ChildItem 'D:\To Sort\2019' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'D:\To Sort\2017' -Recurse | where {!$_.PsIsContainer}
  
 # List Files which will be moved
 #$files
  
 # Target Filder where files should be moved to. The script will automatically create a folder for the year and month.
-$targetPath = 'D:\Sorted\Output4'
+$targetPath = 'D:\Sorted\Output2017'
  
 foreach ($file in $files) {
 
@@ -264,7 +264,7 @@ foreach ($file in $files) {
         Write-Output (Get-FileHash $newPathNewName).Hash
     } else {
         #actually move
-        Write-Output "Time toactually move"
+        Write-Output "Time to actually move"
         $newPathNewName
         $file | Move-Item -Destination $newPathNewName
     }
