@@ -27,13 +27,13 @@ function exiftool {
 }
 
 # Get the files which should be moved, without folders
-$files = Get-ChildItem 'D:\To Sort\2017' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'D:\To Sort\Test\Owl Videos' -Recurse | where {!$_.PsIsContainer}
  
 # List Files which will be moved
 #$files
  
 # Target Filder where files should be moved to. The script will automatically create a folder for the year and month.
-$targetPath = 'D:\Sorted\Output2017'
+$targetPath = 'D:\Sorted\OutputOwl'
  
 foreach ($file in $files) {
 
@@ -44,9 +44,27 @@ foreach ($file in $files) {
     $lng = $null
 
     $file.FullName
+    $file.Extension
 
     #$file | Format-List
        
+    #deal with files with no file extension
+    if ($file.Extension -eq "") {
+        #no file extension
+        $output = exiftool -function "MIMEType" -filepath $file.fullName
+
+        $output
+
+        if ($output -like "*video/mp4*") {
+            $newName = $file.BaseName + ".mp4"
+            $newName
+            Write-Output "rename to add .mp4"
+            $file = Rename-Item -Path $file.fullName -NewName $newName -PassThru
+
+        }
+
+        
+    }
     
     if ($file.Extension -eq ".JPG" -or $file.Extension -eq ".JPEG" -or $file.Extension -eq ".HEIC") {
         $dateField = "DateTimeOriginal"
@@ -73,6 +91,7 @@ foreach ($file in $files) {
     } elseif ($file.Extension -eq "original") { #to-do this should be contains
         continue #skip these
     } else {
+        #Other file extension
         $dateField = "FileModifyDate"
     }
 
