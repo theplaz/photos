@@ -28,7 +28,7 @@ function exiftool {
 }
 
 # Get the files which should be moved, without folders
-$files = Get-ChildItem 'D:\To Sort\Test\Dupe' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'D:\To Sort\2019' -Recurse | where {!$_.PsIsContainer}
  
 # List Files which will be moved
 #$files
@@ -257,8 +257,17 @@ foreach ($file in $files) {
         }
     }
 
-    #actually move
-    Write-Output "Time to move"
-    $newPathNewName
-    $file | Move-Item -Destination $newPathNewName
+    #check if we actually need to move
+    if (Test-Path $newPathNewName) {
+        Write-Output "file exists with same hash; skip"
+        Write-Output (Get-FileHash $file.FullName).Hash
+        Write-Output (Get-FileHash $newPathNewName).Hash
+    } else {
+        #actually move
+        Write-Output "Time toactually move"
+        $newPathNewName
+        $file | Move-Item -Destination $newPathNewName
+    }
+
+    
 }
