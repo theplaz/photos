@@ -1,6 +1,6 @@
 #Goal is to organize files into folders by timestamp taken at LOCAL time (when taken).
 
-$TimeZoneKey = Get-Content -Path TimeZonesKey.txt
+$TimeZoneKey = Get-Content -Path "C:\Users\plasm\OneDrive\Documents\GitHub\photos\TimeZonesKey.txt"
 
 function exiftool {
     Param ([string]$function, [string] $filePath)
@@ -28,7 +28,7 @@ function exiftool {
 }
 
 # Get the files which should be moved, without folders
-$files = Get-ChildItem 'D:\To Sort\2019' -Recurse | where {!$_.PsIsContainer}
+$files = Get-ChildItem 'D:\To Sort\Test\Dupe' -Recurse | where {!$_.PsIsContainer}
  
 # List Files which will be moved
 #$files
@@ -211,37 +211,41 @@ foreach ($file in $files) {
     }
 
 
-    #to fix: if the (1) version coipid first then normal version tries to be copied
-
-    #rename away (1)
+    #remove away (#)
     $newPathCurrentName = $Directory + "\" + $file
     $newPathCurrentName
+    Write-Output $file.BaseName
+    Write-Output "rename and copy"
+    Write-Output ($file -like '*(Edited)*')
+    if ($file -like '*(Edited)*') {
+        Write-Output "leave name since Edited"
+        $newFileName = $file.BaseName
+    } else {
+        Write-Output "strip ()"
+        $newFileName = $file.BaseName -replace '\([^\)]+\)'
+        $newFileName
+    }
+    Write-Output $newFileName
+    $newPathNewName = $Directory + "\" + $newFileName + $file.Extension
+    Write-Output $newPathNewName
+    
+
+
     #if the file already exists
-    if (Test-Path $newPathCurrentName) {
+    if (Test-Path $newPathNewName) {
         Write-Output "file exists"
-        #if the file is not the same, keep old name
-        if (-not ((Get-FileHash $file.FullName).Hash -eq (Get-FileHash $newPathCurrentName).Hash)) {
-            #copy as is
-            # Move File to new location
-            Write-Output "keep old name"
-            $file | Move-Item -Destination $Directory
+        #if the file is not the same, add (2)
+        while (-not ((Get-FileHash $file.FullName).Hash -eq (Get-FileHash $newPathNewName).Hash)) {
+            Write-Output "add (2)"
+            $newFileName = $newFileName + " (2)"
+            $newPathNewName = $Directory + "\" + $newFileName + $file.Extension
+            Write-Output $newFileName
+            $file | Move-Item -Destination $newPathNewName
         }
         #if the same, skip
     } else { #file doesnt exist
        #rename and copy
-       Write-Output "rename and copy"
-       Write-Output ($file -like '*(Edited)*')
-       if ($file -like '*(Edited)*') {
-           Write-Output "leave name since Edited"
-           $newFileName = $file
-       } else {
-           Write-Output "strip ()"
-           $newFileName = $file -replace '\([^\)]+\)'
-           $newFileName
-       }
-       Write-Output $newFileName
-       $newPathNewName = $Directory + "\" + $newFileName
-       $newPathNewName
        $file | Move-Item -Destination $newPathNewName
+      
     }
 }
