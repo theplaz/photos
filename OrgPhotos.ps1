@@ -77,13 +77,19 @@ foreach ($file in $files) {
             $dateField = "CreationDate"
             $adjustForTimeZoneOffset = $False
         } else {
-            #times will be GMT
-            #$dateField = "CreateDate"
-            #actually adjustment ioffset is wrong
-            #$adjustForTimeZoneOffset = $True
-            #but file modify time without offset right
-            $dateField = "FileModifyDate"
-            $adjustForTimeZoneOffset = $False
+            $output = exiftool -function "MediaCreateDate" -filepath $file.fullName
+            if (-not [string]::IsNullOrEmpty($output)) {
+                $dateField = "MediaCreateDate"
+                $adjustForTimeZoneOffset = $False
+            } else {
+                #times will be GMT
+                #$dateField = "CreateDate"
+                #actually adjustment ioffset is wrong
+                #$adjustForTimeZoneOffset = $True
+                #but file modify time without offset right
+                $dateField = "FileModifyDate"
+                $adjustForTimeZoneOffset = $False
+            }
 
         }
     } elseif ($file.Extension -eq ".GIF") {
